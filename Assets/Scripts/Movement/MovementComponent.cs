@@ -11,8 +11,11 @@ public class MovementComponent
     float timer = 0;
     LayerMask layer;
     Vector2 lerpPos;
+    float timerInput;
+    SpriteRenderer spriteRenderer;
 
-    public MovementComponent(InputsComponent inputs, MoveData moveData, Transform movingObject, Animator anim)
+
+    public MovementComponent(InputsComponent inputs, MoveData moveData, Transform movingObject, Animator anim, SpriteRenderer spriteRenderer)
     {
         this.inputs = inputs;
         this.moveData = moveData;
@@ -22,46 +25,97 @@ public class MovementComponent
         inputs.moveObject = movingObject;
         this.layer = moveData.layer;
         lerpPos = Vector2.zero;
+        timerInput = moveData.cooldownDuration;
+        this.spriteRenderer = spriteRenderer;
     }
 
     public void Tick()
     {
+        
+        if (timerInput < moveData.cooldownDuration)
+        {
+            if (timerInput > 0)
+            {
+
+                timerInput -= Time.deltaTime;
+                return;
+            }
+            else
+            {
+                timerInput = moveData.cooldownDuration;
+            }
+        }
+
         if (inputs.xAxis != 0)
         {
+            anim.SetBool("isRunning", true);
             inputs.isLerping = true;
             Debug.DrawRay(movingObject.position, inputs.xAxis * Vector2.right, Color.red, 3f);
-            if (!Physics2D.Raycast(movingObject.position, inputs.xAxis * Vector2.right, 1f, layer) && timer < moveData.lerpDuration)
+            inputs.endPos = inputs.startPos + inputs.xAxis * Vector2.right;
+            if (!Physics2D.Raycast(inputs.startPos, inputs.xAxis * Vector2.right, 1f, layer))
             {
-                Debug.Log("GOGOOGOGO");
-                lerpPos = Vector2.Lerp(inputs.startPos, new Vector2 (inputs.endPos.x, movingObject.position.y), timer/moveData.lerpDuration);
-                movingObject.position = lerpPos;
-                timer += Time.deltaTime;
+                spriteRenderer.flipX = inputs.xAxis < 0;
+                if (timer < moveData.lerpDuration)
+                {
+                    Debug.Log("GOGOOGOGO");
+                    lerpPos = Vector2.Lerp(inputs.startPos, inputs.endPos, timer / moveData.lerpDuration);
+                    movingObject.position = lerpPos;
+                    timer += Time.deltaTime;
+
+                }
+                else
+                {
+                    anim.SetBool("isRunning", false);
+                    timerInput -= Time.deltaTime;
+                    timer = 0;
+                    movingObject.position = inputs.endPos;
+                    inputs.isLerping = false;
+                }
             }
-            
 
             else
             {
+                anim.SetBool("isRunning", false);
+                movingObject.position = inputs.startPos;
                 timer = 0;
-                
                 inputs.isLerping = false;
             }
+
+
         }
 
         else if (inputs.yAxis != 0)
         {
+            anim.SetBool("isRunning", true);
             inputs.isLerping = true;
-            Debug.DrawRay(movingObject.position, inputs.yAxis * Vector2.up, Color.black, 3f);
-            if (!Physics2D.Raycast(movingObject.position, inputs.yAxis * Vector2.up, 1f, layer) && timer < moveData.lerpDuration)
-            {
-                lerpPos = Vector2.Lerp(inputs.startPos, new Vector2(movingObject.position.x, inputs.endPos.y ), timer / moveData.lerpDuration);
-                movingObject.position = lerpPos;
-                timer += Time.deltaTime;
-            }
+            //Debug.DrawRay(movingObject.position, inputs.yAxis * Vector2.up, Color.black, 3f);
 
+            inputs.endPos = inputs.startPos + inputs.yAxis * Vector2.up;
+            Debug.DrawLine(inputs.startPos, inputs.endPos);
+            if (!Physics2D.Raycast(inputs.startPos, inputs.yAxis * Vector2.up, 1f, layer))
+            {
+                if (timer < moveData.lerpDuration)
+                {
+                    lerpPos = Vector2.Lerp(inputs.startPos, inputs.endPos, timer / moveData.lerpDuration);
+                    movingObject.position = lerpPos;
+                    timer += Time.deltaTime;
+
+                }
+
+                else
+                {
+                    anim.SetBool("isRunning", false);
+                    timerInput -= Time.deltaTime;
+                    timer = 0;
+                    movingObject.position = inputs.endPos;
+                    inputs.isLerping = false;
+                }
+            }
             else
             {
+                anim.SetBool("isRunning", false);
+                movingObject.position = inputs.startPos;
                 timer = 0;
-                
                 inputs.isLerping = false;
             }
         }

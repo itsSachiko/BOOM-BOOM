@@ -46,7 +46,7 @@ public class PlayerInputs : InputsComponent
         xAxis = Input.GetAxisRaw("Horizontal");
         yAxis = Input.GetAxisRaw("Vertical");
         startPos = moveObject.position;
-        endPos = startPos + new Vector2(xAxis, yAxis);
+        //endPos = startPos + new Vector2(xAxis, yAxis);
     }
 }
 
