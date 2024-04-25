@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,6 +6,7 @@ using UnityEngine;
 public class PlayerHP : MonoBehaviour, HP
 {
     public float serializedHP;
+    public static Action onLose;
     public float hp { get; set; }
 
     private void Start()
@@ -17,7 +19,7 @@ public class PlayerHP : MonoBehaviour, HP
         hp -= dmg;
         if (hp <= 0)
         {
-            //u lost
+            onLose?.Invoke();
 
         }
     }
